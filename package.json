@@ -1,0 +1,23 @@
+{
+  "name": "imscv-script",
+  "version": "0.0.1",
+  "description": "",
+  "author": {
+    "name": "jim_",
+    "email": "769925821@qq.com",
+    "url": "github.com/jimliang"
+  },
+  "keywords": ["imscv","nodejs"],
+  "main": "index.js",
+  "scripts": {
+  },
+  "license": "ISC",
+  "engines": {
+    "node": ">=4"
+  },
+  "dependencies": {
+    "crypto-js": "^3.1.9-1",
+    "form-data": "^2.1.0",
+    "node-fetch": "^1.6.3"
+  }
+}
