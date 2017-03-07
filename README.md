@@ -32,6 +32,12 @@
  console.log(yield imscv.getUserTaskList())
 ```
 
+> loginToken的获取
+>
+> 1. 手动抓包，获取登录时返回的数据
+> 2. 此时有一个加密后的loginToken，再通过`require('./lib/crypto').decrypt(loginToken)`得到解密后的loginToken
+
+
 ## Demo
 
 日常任务脚本，请参照 [demo](example/test.js)， （日常任务包括： 每日签到、每日群聊、每日1km、每日点赞、每日评论和每日动态）
