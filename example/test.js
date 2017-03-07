@@ -87,7 +87,7 @@ function run() {
             if (!isFinisheds[task.flag]) {
                 log(`${task.flag}...`)
                try {
-                   task.exec(imscv)
+                   yield task.exec(imscv)
                    log(`${task.flag} complete!`)
                } catch (e) {
                     log(`${task.flag} error! ${e.message}`)
