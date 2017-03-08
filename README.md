@@ -25,6 +25,8 @@
 
 - getCarList （获取绑定的所有车）
 
+- getCarRankingList （车辆总榜）
+
 - addCarStatistics （提交车的公里数）
 
 ## 使用
