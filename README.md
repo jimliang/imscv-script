@@ -13,6 +13,8 @@
 
 - addShareArticle （发帖）
 
+- getMyClubList （获取俱乐部列表）
+
 - addClubMessage （群聊）
 
 - addAttachment （上传文件）
