@@ -32,14 +32,12 @@
 ## 使用
 
 ```
- var imscv = new Imscv(loginToken)
+ var imscv = yield Imscv.login({
+    userName: '+86 13xxxxxxxxx',
+    password: '....'
+ })
  console.log(yield imscv.getUserTaskList())
 ```
-
-> loginToken的获取
->
-> 1. 手动抓包，获取登录时返回的数据
-> 2. 此时有一个加密后的loginToken，再通过`require('./lib/crypto').decrypt(loginToken)`得到解密后的loginToken
 
 
 ## Demo
