@@ -4,6 +4,7 @@
 var fs = require('fs')
 var path = require('path')
 var co = require('co')
+var schedule = require('node-schedule');
 var Imscv = require('./../lib')
 var heweather = require('./heweather')
 
@@ -26,20 +27,20 @@ var tasks = [
             var car = carList[0], mileage = car.mileage
             return imscv.addCarStatistics({
                 sn: '1031025CBCE3004F',
-                mileageTotal: (mileage + range(2, 15)).toFixed(3)
+                mileageTotal: (mileage + range(5, 30)).toFixed(3)
             })
         })
     },
     {
         flag: 'TASK_SHARE_ARTICLE_LIKE', // 每日点赞
-        exec: imscv => getLastArticle(imscv).then(article => imscv.addShareArticleLike({
+        exec: (imscv, context) => getLastArticle(imscv, context).then(article => imscv.addShareArticleLike({
             shareArticleId: article.shareArticleId,
             shareArticleType: article.shareArticleType
         }))
     },
     {
         flag: 'TASK_SHARE_ARTICLE_COMMENT', // 每日评论
-        exec: imscv => getLastArticle(imscv).then(article => imscv.addShareArticleComment({
+        exec: (imscv, context) => getLastArticle(imscv, context).then(article => imscv.addShareArticleComment({
             content: '签到签到~~',
             shareArticleId: article.shareArticleId
         }))
@@ -75,41 +76,65 @@ var tasks = [
     }
 ]
 
-function run() {
-    var imscv = new Imscv(loginToken)
+function * dailyTask(imscv) {
+    var taskList = yield imscv.getUserTaskList()
+    var isFinisheds = taskList.reduce((a, b) => (a[b.flag] = b.isFinished, a), {})
 
-    co(function *() {
-
-        var taskList = yield imscv.getUserTaskList()
-        var isFinisheds = taskList.reduce((a, b) => (a[b.flag] = b.isFinished, a), {})
-
-        for(let task of tasks) {
-            if (!isFinisheds[task.flag]) {
-                log(`${task.flag}...`)
-               try {
-                   yield task.exec(imscv)
-                   log(`${task.flag} complete!`)
-               } catch (e) {
-                    log(`${task.flag} error! ${e.message}`)
-               }
+    var context = {}
+    for (let task of tasks) {
+        if (!isFinisheds[task.flag]) {
+            log(`${task.flag}...`)
+            try {
+                yield task.exec(imscv, context)
+                log(`${task.flag} complete!`)
+            } catch (e) {
+                log(`${task.flag} error! ${e.message}`)
             }
         }
+    }
+}
+
+function main() {
+    getImscv().then(imscv => {
+
+        var daily = () => {
+            co(dailyTask(imscv))
+                .then(() => log('daily done!'))
+                .catch((err) => log(err))
+        }
+        schedule.scheduleJob('0 0 8 * * *', daily)
+        schedule.scheduleJob('0 0 10 * * *', daily)
+    })
+        .then(data => console.log('done', data))
+        .catch(err => console.log('err', err))
+
+}
+
+function getImscv() {
+    return readLoginToken().then(loginToken => new Imscv(loginToken))
+}
+
+function getLastArticle(imscv, context) {
+    return context._lastArticle || (context._lastArticle = imscv.getLatestShareArticleList(1, 4).then(data => data.data.filter(item => !item.isHead)[[0]]))
+}
+
+function readLoginToken() {
+    return new Promise((resolve, reject) => {
+        fs.readFile(path.join(__dirname, '.imscv.txt'), 'utf8', function (err, data) {
+            if (err) {
+                return reject(err)
+            }
+            resolve(data)
+        })
     })
 }
 
-function getLastArticle(imscv) {
-    return imscv._lastArticle || (imscv._lastArticle = imscv.getLatestShareArticleList().then(data => data.data[[0]]))
-}
-
 function log(str) {
-    console.log(now(), str);
-}
-function now() {
-    return new Date().format('yyyy/MM/dd mm:hh:ss')
+    console.log(new Date().format('yyyy/MM/dd mm:hh:ss'), str);
 }
 
 function range(min, max) {
     return Math.random() * (max - min) + min
 }
 
-run()
+main()
