@@ -76,7 +76,7 @@ var tasks = [
     }
 ]
 
-function * dailyTask(imscv) {
+function* dailyTask(imscv) {
     var taskList = yield imscv.getUserTaskList()
     var isFinisheds = taskList.reduce((a, b) => (a[b.flag] = b.isFinished, a), {})
 
@@ -94,18 +94,40 @@ function * dailyTask(imscv) {
     }
 }
 
+function* catchRedPacket(imscv) {
+    let data = yield imscv.getBatchClubUnReadMessageCount()
+    for (let { clubId, clubName } of data) {
+        let { data: messages } = yield imscv.getPageClubMessage({ clubId })
+        log(`get ${messages.length} messages from '${clubName}'`)
+        for (let { messageType, messageContent } of messages) {
+            if (messageType == 4) {
+                let packet = JSON.parse(messageContent)
+                log(`find redpacket: packetId: ${packet.redPacketId} - '${packet.description}'`)
+                let redPacket = yield imscv.getRedPacket(packet.redPacketId)
+                log(`fetch redpack packetId: ${redPacket.redPacketId} - isReceive(${redPacket.isReceive}) - ${redPacket.receiveCount}/${redPacket.packetCount}`)
+                if (!redPacket.isReceive && redPacket.receiveCount < redPacket.packetCount) {
+                    try {
+                        let result = yield imscv.openRedPacket(redPacket.redPacketId)
+                        log(`open redpacket success: receiveMoney(${result.receiveMoney})`)
+                    } catch (e) {
+                        log(e)
+                    }
+                }
+            }
+        }
+    }
+}
+
 function main() {
     getImscv().then(imscv => {
 
-        var daily = () => {
-            co(dailyTask(imscv))
-                .then(() => log('daily done!'))
-                .catch((err) => log(err))
-        }
+        var daily = () => logCo(dailyTask(imscv))
         schedule.scheduleJob('0 0 8 * * *', daily)
         schedule.scheduleJob('0 0 10 * * *', daily)
+
+        setInterval(() => logCo(catchRedPacket(imscv)), 5000)
     })
-        .then(data => console.log('done', data))
+        .then(data => console.log('done', data || ''))
         .catch(err => console.log('err', err))
 
 }
@@ -131,6 +153,10 @@ function readLoginToken() {
 
 function log(str) {
     console.log(new Date().format('yyyy/MM/dd mm:hh:ss'), str);
+}
+
+function logCo(r) {
+    co(r).catch(err => log(err))
 }
 
 function range(min, max) {
