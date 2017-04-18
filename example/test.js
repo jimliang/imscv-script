@@ -146,7 +146,7 @@ function readLoginToken() {
             if (err) {
                 return reject(err)
             }
-            resolve(data)
+            resolve(data.trim())
         })
     })
 }
