@@ -82,7 +82,7 @@ function* dailyTask(imscv) {
 
     var context = {}
     for (let task of tasks) {
-        if (!isFinisheds[task.flag]) {
+        if (isFinisheds.hasOwnProperty(task.flag) && !isFinisheds[task.flag]) {
             log(`${task.flag}...`)
             try {
                 yield task.exec(imscv, context)
