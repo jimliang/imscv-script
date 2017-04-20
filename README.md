@@ -29,6 +29,20 @@
 
 - addCarStatistics （提交车的公里数）
 
+- getUnReadCount （未读通知数量）
+
+- getMyClubList （获取我加入的俱乐部列表）
+
+- getBatchClubUnReadMessageCount （获取俱乐部未读消息数量）
+
+- getPageClubMessage （获取指定俱乐部消息）
+
+- addRedPacket （发送红包）
+
+- getRedPacket （获取红包信息）
+
+- openRedPacket （抢红包）
+
 ## 使用
 
 ```
@@ -42,7 +56,7 @@
 
 ## Demo
 
-日常任务脚本，请参照 [demo](example/test.js)， （日常任务包括： 每日签到、每日群聊、每日1km、每日点赞、每日评论和每日动态）
+日常任务+抢红包脚本，请参照 [demo](example/test.js)， （日常任务包括： 每日签到、每日群聊、每日1km、每日点赞、每日评论和每日动态）
 
 效果
 

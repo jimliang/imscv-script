@@ -102,9 +102,9 @@ function* catchRedPacket(imscv) {
         for (let { messageType, messageContent } of messages) {
             if (messageType == 4) {
                 let packet = JSON.parse(messageContent)
-                log(`find redpacket: packetId: ${packet.redPacketId} - '${packet.description}'`)
+                log(`find redpacket(${packet.redPacketId}) - '${packet.description}'`)
                 let redPacket = yield imscv.getRedPacket(packet.redPacketId)
-                log(`fetch redpack packetId: ${redPacket.redPacketId} - isReceive(${redPacket.isReceive}) - ${redPacket.receiveCount}/${redPacket.packetCount}`)
+                log(`fetch redpacket(${redPacket.redPacketId}) - isReceive(${redPacket.isReceive}) - ${redPacket.receiveCount}/${redPacket.packetCount}`)
                 if (!redPacket.isReceive && redPacket.receiveCount < redPacket.packetCount) {
                     try {
                         let result = yield imscv.openRedPacket(redPacket.redPacketId)
