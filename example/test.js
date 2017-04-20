@@ -127,6 +127,26 @@ async function catchRedPacket (imscv) {
     }
 }
 
+async function deleteArticles (imscv) {
+    let articles, i = 0
+    while ((articles = await getDayArticle(imscv)).length) {
+        for (let article of articles) {
+            await imscv.deleteShareArticle({
+                shareArticleId: article.shareArticleId
+            })
+            i++
+            log(`删除 ${article.shareArticleId}`)
+        }
+
+    }
+    log(`共删除 ${i}条`)
+}
+
+async function getDayArticle (imscv) {
+    const { data } = await imscv.getMyShareArticleList()
+    return data.filter(article => article.shareContent.indexOf('天气预报：') !== -1)
+}
+
 async function main () {
     const imscv = await getImscv()
     const daily = () => dailyTask(imscv)
