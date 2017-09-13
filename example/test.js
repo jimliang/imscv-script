@@ -1,14 +1,14 @@
 /**
  * Created by jimliang on 2017/2/23.
  */
-var fs = require('fs')
-var path = require('path')
-var schedule = require('node-schedule');
-var Imscv = require('./../lib')
-var heweather = require('./heweather')
+const fs = require('fs')
+const path = require('path')
+const schedule = require('node-schedule')
+const Imscv = require('./../lib')
+const joke = require('./joke')
+const fetch = require('node-fetch')
 
-
-var tasks = [
+const tasks = [
     {
         flag: 'TASK_USER_CHECKIN', // 每日签到
         async exec (imscv) {
@@ -31,7 +31,7 @@ var tasks = [
             const mileage = car.mileage
             return await imscv.addCarStatistics({
                 sn: '1031025CBCE3004F',
-                mileageTotal: (mileage + range(5, 30)).toFixed(3)
+                mileageTotal: (mileage + range(10, 40)).toFixed(3)
             })
         }
     },
@@ -58,29 +58,15 @@ var tasks = [
     {
         flag: 'TASK_SHARE_ARTICLE_DAY', // 每日动态
         async exec (imscv) {
-            const [data, id] = await Promise.all([
-                heweather.now('shenzhen'),
-                imscv.addAttachment(fs.createReadStream(path.join(__dirname, 'pic.jpg')))
-            ])
-            const item = data.HeWeather5[0]
-            const infos = [
-                ['城市', item => item.basic.city],
-                ['更新时间', item => item.basic.update.loc],
-                ['天气状况描述', item => item.now.cond.txt],
-                ['体感温度', item => item.now.fl],
-                ['相对湿度（%）', item => item.now.hum],
-                ['降水量（mm）', item => item.now.pcpn],
-                ['气压', item => item.now.pres],
-                ['温度', item => item.now.tmp],
-                ['能见度（km）', item => item.now.vis],
-                ['风力风向', item => `风向（360度）- ${item.now.wind.deg} 风向 - ${item.now.wind.dir} 风力 - ${item.now.wind.sc} 风速（kmph）- ${item.now.wind.spd}`],
-            ]
-
-            const shareContent = (`天气预报： \n` + infos.map(a => `${a[0]}： ${a[1](item)}`).join('\n'))
-            return await imscv.addShareArticle({
+            const [jokeItem] = await joke()
+            const file = await writeFile(jokeItem.thumburl)
+            const id = await imscv.addAttachment(fs.createReadStream(file))
+            const shareContent = `笑话： \n${jokeItem.title}`
+            await imscv.addShareArticle({
                 shareContent,
                 attachmentList: [id]
             })
+            fs.unlink(file)
         }
     }
 ]
@@ -147,6 +133,17 @@ async function getDayArticle (imscv) {
     return data.filter(article => article.shareContent.indexOf('天气预报：') !== -1)
 }
 
+async function writeFile (url) {
+    const res = await fetch(url)
+    const file = path.join(__dirname, path.basename(url))
+    const dest = fs.createWriteStream(file)
+    res.body.pipe(dest)
+    return new Promise((resolve, reject) => {
+        res.body.on('end', () => resolve(file))
+        res.body.on('error', reject)
+    })
+}
+
 async function main () {
     const imscv = await getImscv()
     const daily = () => dailyTask(imscv)
@@ -167,16 +164,13 @@ function getLastArticle (imscv, context) {
 function readLoginToken () {
     return new Promise((resolve, reject) => {
         fs.readFile(path.join(__dirname, '.imscv.txt'), 'utf8', function (err, data) {
-            if (err) {
-                return reject(err)
-            }
-            resolve(data.trim())
+            err ? reject(err) : resolve(data.trim())
         })
     })
 }
 
 function log (str) {
-    console.log(new Date().format('yyyy/MM/dd mm:hh:ss'), str);
+    console.log(new Date().format('yyyy/MM/dd mm:hh:ss'), str)
 }
 
 function range (min, max) {
