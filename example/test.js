@@ -149,7 +149,7 @@ async function main () {
     const daily = () => dailyTask(imscv)
     schedule.scheduleJob('0 0 8 * * *', daily)
     schedule.scheduleJob('0 0 10 * * *', daily)
-    setInterval(() => catchRedPacket(imscv), 5000)
+    // setInterval(() => catchRedPacket(imscv), 5000)
 }
 
 async function getImscv () {
